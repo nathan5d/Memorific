@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MatchMaster - Jogo da Memória</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+        #game-board {
+            display: flex;
+            flex-wrap: wrap;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .card {
+            width: 100px;
+            height: 100px;
+            margin: 5px;
+            background-color: #ddd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            cursor: pointer;
+            position: relative;
+            perspective: 1000px;
+            transition: transform 0.5s;
+            transform: rotateY(180deg);
+        }
+
+        .card i {
+            display: none;
+
+        }
+
+        .card.flipped {
+            transform: rotateY(0deg);
+        }
+
+        .card.flipped i {
+            display: block;
+        }
+
+        .card.matched {
+            background-color: #ccc;
+            pointer-events: none;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        #game-players {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        .player {
+            text-align: center;
+        }
+
+        .score {
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="text-center mt-4">MatchMaster</h1>
+
+        <div id="game-players" class="mb-4">
+            <div id="player1" class="player">
+                <h2>Jogador 1</h2>
+                <span class="score">Pontuação: 0</span>
+            </div>
+            <div id="player2" class="player">
+                <h2>Jogador 2</h2>
+                <span class="score">Pontuação: 0</span>
+            </div>
+        </div>
+
+        <div id="game-board">
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            var cards = $('.card');
+            var flippedCards = [];
+            var matchedCards = [];
+            var currentPlayer = 1;
+            var players = {
+                1: { score: 0 },
+                2: { score: 0 }
+            };
+
+            // Define o número total de cartas (peças)
+            var numOfCards = 20;
+            // Calcula o número de pares
+            var numOfPairs = numOfCards / 2;
+            // Ícones disponíveis
+            var availableIcons = [
+                'cat', 'dog', 'fish', 'tree', 'car', 'heart', 'rocket', 'star',
+                'gem', 'coffee', 'bell', 'book', 'camera', 'music', 'globe',
+                'paper-plane', 'sun', 'moon', 'smile', 'frown', 'flag', 'lightbulb',
+                'key', 'clock', 'umbrella', 'gamepad', 'puzzle-piece', 'leaf'
+            ];
+            // Embaralha os ícones
+            shuffleArray(availableIcons);
+            // Seleciona os ícones para os pares de cartas
+            var selectedIcons = availableIcons.slice(0, numOfPairs);
+            var cardIcons = selectedIcons.concat(selectedIcons);
+            // Embaralha os ícones novamente
+            shuffleArray(cardIcons);
+
+            // Gera as cartas (peças) com os ícones
+            for (var i = 0; i < numOfCards; i++) {
+                var card = $('<div class="card" data-card="' + cardIcons[i] + '">');
+                var icon = $('<i class="fas fa-' + cardIcons[i] + '">');
+                card.append(icon);
+                $('#game-board').append(card);
+            }
+
+            cards = $('.card'); // Atualiza a lista de cartas após a criação
+
+            cards.on('click', function () {
+                var card = $(this);
+
+                if (card.hasClass('flipped') || card.hasClass('matched') || flippedCards.length === 2) {
+                    return;
+                }
+
+                card.addClass('flipped');
+                flippedCards.push(card);
+                card.find('i').show();
+
+                if (flippedCards.length === 2) {
+                    var card1 = flippedCards[0];
+                    var card2 = flippedCards[1];
+
+                    if (card1.data('card') === card2.data('card')) {
+                        card1.addClass('matched');
+                        card2.addClass('matched');
+                        matchedCards.push(card1, card2);
+                        flippedCards = [];
+                        updateScore(currentPlayer, 1);
+
+                        if (matchedCards.length === cards.length) {
+                            setTimeout(function () {
+                                endGame();
+                            }, 500);
+                        }
+                    } else {
+                        setTimeout(function () {
+                            card1.removeClass('flipped');
+                            card2.removeClass('flipped');
+                            card1.find('i').hide();
+                            card2.find('i').hide();
+                            flippedCards = [];
+                            currentPlayer = currentPlayer === 1 ? 2 : 1;
+                            switchPlayer(currentPlayer);
+                        }, 1000);
+                    }
+                }
+            });
+
+            function updateScore(player, points) {
+                players[player].score += points;
+                var scoreElement = $('#player' + player + ' .score');
+                scoreElement.text('Pontuação: ' + players[player].score);
+            }
+
+            function switchPlayer(player) {
+                $('.player').removeClass('active');
+                $('#player' + player).addClass('active');
+            }
+
+            function endGame() {
+                var winner = players[1].score > players[2].score ? 1 : 2;
+                alert('Parabéns, Jogador ' + winner + '! Você venceu o jogo!');
+            }
+
+            switchPlayer(currentPlayer);
+
+            // Função para embaralhar um array
+            function shuffleArray(array) {
+                var currentIndex = array.length;
+                var temporaryValue, randomIndex;
+
+                while (currentIndex !== 0) {
+                    randomIndex = Math.floor(Math.random() * currentIndex);
+                    currentIndex -= 1;
+                    temporaryValue = array[currentIndex];
+                    array[currentIndex] = array[randomIndex];
+                    array[randomIndex] = temporaryValue;
+                }
+
+                return array;
+            }
+        });
+    </script>
+</body>
+
+</html>

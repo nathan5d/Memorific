@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Velha</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+        .square {
+            width: 100px;
+            height: 100px;
+            font-size: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #eee;
+            cursor: pointer;
+            margin: 2px;
+        }
+
+        .board-row {
+            display: flex;
+        }
+
+        .board-row:after {
+            clear: both;
+            content: "";
+            display: table;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="text-center mt-4">Jogo da Velha</h1>
+
+        <div class="text-center my-4">
+            <button class="btn btn-primary" id="reset-button">Reiniciar</button>
+        </div>
+
+        <div id="board" class="text-center">
+            <div class="board-row">
+                <div class="square" data-square="0"></div>
+                <div class="square" data-square="1"></div>
+                <div class="square" data-square="2"></div>
+            </div>
+            <div class="board-row">
+                <div class="square" data-square="3"></div>
+                <div class="square" data-square="4"></div>
+                <div class="square" data-square="5"></div>
+            </div>
+            <div class="board-row">
+                <div class="square" data-square="6"></div>
+                <div class="square" data-square="7"></div>
+                <div class="square" data-square="8"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            var board = $('#board');
+            var squares = $('.square');
+            var currentPlayer = 'X';
+            var gameFinished = false;
+
+            squares.on('click', function () {
+                if (gameFinished) {
+                    return;
+                }
+
+                var square = $(this);
+
+                if (square.text() !== '') {
+                    return;
+                }
+
+                square.text(currentPlayer);
+                square.addClass('text-primary');
+
+                if (checkWinCondition()) {
+                    gameFinished = true;
+                    setTimeout(function () {
+                        alert('Jogador ' + currentPlayer + ' venceu!');
+                    }, 100);
+                    return;
+                }
+
+                if (checkDrawCondition()) {
+                    gameFinished = true;
+                    setTimeout(function () {
+                        alert('O jogo terminou em empate!');
+                    }, 100);
+                    return;
+                }
+
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            });
+
+            $('#reset-button').on('click', function () {
+                squares.text('');
+                squares.removeClass('text-primary');
+                currentPlayer = 'X';
+                gameFinished = false;
+            });
+
+            function checkWinCondition() {
+                var winningCombinations = [
+                    [0, 1, 2],
+                    [3, 4, 5],
+                    [6, 7, 8],
+                    [0, 3, 6],
+                    [1, 4, 7],
+                    [2, 5, 8],
+                    [0, 4, 8],
+                    [2, 4, 6]
+                ];
+
+                for (var i = 0; i < winningCombinations.length; i++) {
+                    var combination = winningCombinations[i];
+                    var a = squares.eq(combination[0]).text();
+                    var b = squares.eq(combination[1]).text();
+                    var c = squares.eq(combination[2]).text();
+
+                    if (a !== '' && a === b && b === c) {
+                        squares.eq(combination[0]).addClass('text-success');
+                        squares.eq(combination[1]).addClass('text-success');
+                        squares.eq(combination[2]).addClass('text-success');
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            function checkDrawCondition() {
+                for (var i = 0; i < squares.length; i++) {
+                    if (squares.eq(i).text() === '') {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        });
+    </script>
+</body>
+
+</html>
